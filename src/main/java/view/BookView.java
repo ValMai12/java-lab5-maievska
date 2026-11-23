@@ -25,6 +25,8 @@ public class BookView {
         System.out.println("3. Знайти книги за видавництвом");
         System.out.println("4. Знайти книги, видані після заданого року");
         System.out.println("5. Відсортувати книги за видавництвом");
+        System.out.println("6. Зберегти книги у файл");
+        System.out.println("7. Завантажити книги з файлу");
         System.out.println("0. Вийти");
         System.out.print("Виберіть пункт: ");
     }

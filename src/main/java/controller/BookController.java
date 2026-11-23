@@ -1,38 +1,24 @@
 
 package controller;
 
+import files.BookFileManager;
 import model.Book;
 import view.BookView;
+
+import java.io.IOException;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Random;
 import java.util.Scanner;
 
 public class BookController {
 
-    private final Book[] books;
+    private Book[] books;
     private final BookView view;
-    private final Random random = new Random();
-
-    private final String[] authors = {
-        "Леся Українка",
-        "Михайло Коцюбинський",
-        "Іван Франко",
-        "Невідомий автор"
-    };
-
-    private final String[] publishers = {
-        "Освіта",
-        "Фоліо",
-        "Ранок",
-        "Невідоме видавництво"
-    };
-
-    private final int[] years = {
-        2010, 2015, 2018, 2023, 2025
-    };
+    private final BookFileManager fileManager = new BookFileManager();
 
     public BookController(Book[] books, BookView view) {
         this.books = books;
@@ -84,6 +70,47 @@ public class BookController {
         Arrays.sort(books, byPublisher);
     }
 
+    private void saveBooksToFile(Scanner scanner) {
+        System.out.print("Введіть шлях та ім'я файлу: ");
+        String fileName = scanner.nextLine().trim();
+
+        if (fileName.isEmpty()) {
+            view.showMessage("Шлях до файлу не може бути порожнім.");
+            return;
+        }
+
+        try {
+            fileManager.saveBooks(books, Path.of(fileName));
+            view.showMessage("Книги успішно збережено.");
+        } catch (InvalidPathException e) {
+            view.showMessage("Некоректний шлях до файлу.");
+        } catch (IOException e) {
+            view.showMessage("Помилка збереження: " + e.getMessage());
+        }
+    }
+
+    private void loadBooksFromFile(Scanner scanner) {
+        System.out.print("Введіть шлях та ім'я файлу: ");
+        String fileName = scanner.nextLine().trim();
+
+        if (fileName.isEmpty()) {
+            view.showMessage("Шлях до файлу не може бути порожнім.");
+            return;
+        }
+
+        try {
+            Book[] loadedBooks = fileManager.loadBooks(Path.of(fileName));
+            books = loadedBooks;
+
+            view.showMessage("Книги успішно завантажено.");
+            view.showBooks("Завантажені книги:", books);
+        } catch (InvalidPathException e) {
+            view.showMessage("Некоректний шлях до файлу.");
+        } catch (IOException | ClassNotFoundException e) {
+            view.showMessage("Помилка завантаження: " + e.getMessage());
+        }
+    }
+
     public void run() {
         view.showBooks("Початковий масив книг:", books);
 
@@ -100,30 +127,55 @@ public class BookController {
                     break;
 
                 case "2": {
-                    String author = authors[random.nextInt(authors.length)];
-                    view.showMessage("Обраний автор: " + author);
-                    view.showBooks("Результат пошуку:", findByAuthor(author));
+                    System.out.print("Введіть автора: ");
+                    String author = scanner.nextLine().trim();
+
+                    view.showBooks("Результат пошуку:",
+                            findByAuthor(author));
                     break;
                 }
 
                 case "3": {
-                    String publisher = publishers[random.nextInt(publishers.length)];
-                    view.showMessage("Обране видавництво: " + publisher);
-                    view.showBooks("Результат пошуку:", findByPublisher(publisher));
+                    System.out.print("Введіть видавництво: ");
+                    String publisher = scanner.nextLine().trim();
+
+                    view.showBooks("Результат пошуку:",
+                            findByPublisher(publisher));
                     break;
                 }
 
                 case "4": {
-                    int year = years[random.nextInt(years.length)];
-                    view.showMessage("Обраний рік: " + year);
-                    view.showBooks("Книги, видані після " + year + " року:",
-                            findAfterYear(year));
+                    System.out.print("Введіть рік: ");
+                    String input = scanner.nextLine().trim();
+
+                    try {
+                        int year = Integer.parseInt(input);
+
+                        view.showBooks(
+                                "Книги, видані після " + year + " року:",
+                                findAfterYear(year)
+                        );
+                    } catch (NumberFormatException e) {
+                        view.showMessage("Некоректний рік.");
+                    }
+
                     break;
                 }
 
                 case "5":
                     sortByPublisher();
-                    view.showBooks("Книги, відсортовані за видавництвом:", books);
+                    view.showBooks(
+                            "Книги, відсортовані за видавництвом:",
+                            books
+                    );
+                    break;
+
+                case "6":
+                    saveBooksToFile(scanner);
+                    break;
+
+                case "7":
+                    loadBooksFromFile(scanner);
                     break;
 
                 case "0":
